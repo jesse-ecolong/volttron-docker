@@ -4,6 +4,9 @@ services:
   volttron1:
     container_name: volttron1
     hostname: volttron1
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: eclipsevolttron/volttron:latest
     ports:
       # host_port:container_port
@@ -17,6 +20,7 @@ services:
       - CONFIG=/home/volttron/configs
       - LOCAL_USER_ID=1000
       - TZ=America/Los_Angeles
+      - PYTHONPATH=/code/volttron
 
 volumes:
   volttron1-volume:

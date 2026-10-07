@@ -9,6 +9,8 @@ fi
 echo "Before platform setup, print environment."
 printenv
 
+export PYTHONPATH="${VOLTTRON_ROOT}:${PYTHONPATH}"
+
 #Check if the config file is already there and don't run setup-platform.py
 # if it is. Otherwise, the startup errors out when setup-platform.py tries
 # to write new certificates.

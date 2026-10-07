@@ -8,6 +8,7 @@ ARG volttron_git_branch=develop
 #
 SHELL [ "bash", "-c" ]
 #
+
 ENV OS_TYPE=debian
 ENV DIST=bookworm
 ENV VOLTTRON_GIT_BRANCH=${volttron_git_branch}
@@ -138,6 +139,10 @@ RUN echo "package installed at `date`"
 ############################################
 
 RUN python -m pip install zmq
+
+USER volttron
+RUN python3 -m pip install --user pyzmq
+
 
 ########################################
 # The following lines should be run from any Dockerfile that

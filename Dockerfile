@@ -138,7 +138,7 @@ RUN echo "package installed at `date`"
 #    fi
 ############################################
 
-RUN python -m pip install zmq
+RUN python -m pip install --user pyzmq
 
 ########################################
 # The following lines should be run from any Dockerfile that
