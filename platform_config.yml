@@ -56,12 +56,11 @@ agents:
     source: $VOLTTRON_ROOT/services/core/VolttronCentral
     config: $CONFIG/vc.config
     tag: vc
-  
-  subscriber:
-    source: $VOLTTRON_ROOT/examples/ExampleSubscriber
-    config: $CONFIG/subscriber.config
-    tag: subscriber
 
+  sqlhistorian:
+    source: $VOLTTRON_ROOT/services/core/SQLHistorian
+    config: $CONFIG/historian.config
+    tag: historian
 
   # weather:
   #  source: $VOLTTRON_ROOT/services/core/WeatherAgent
