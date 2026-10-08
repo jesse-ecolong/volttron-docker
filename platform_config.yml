@@ -58,8 +58,9 @@ agents:
     tag: vc
 
   weather:
-   source: $VOLTTRON_ROOT/examples/DataPublisher
+   source: $VOLTTRON_ROOT/services/core/WeatherAgent
    config: $CONFIG/weather.config
+   tag: weather
 
 #  price:
 #    source: $VOLTTRON_ROOT/examples/DataPublisher
