@@ -1,6 +1,19 @@
 version: '3.4'
 
 services:
+
+  postgres:
+    image: postgres:16
+    container_name: volttron-postgres
+    environment:
+      POSTGRES_DB: volttron
+      POSTGRES_USER: volttron
+      POSTGRES_PASSWORD: ec0l0ng
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:1738:1738"
+
   volttron1:
     container_name: volttron1
     hostname: volttron1
@@ -17,7 +30,10 @@ services:
       - CONFIG=/home/volttron/configs
       - LOCAL_USER_ID=1000
       - TZ=America/Los_Angeles
+    depends_on:
+      - postgres
 
 volumes:
   volttron1-volume:
     name: volttron1-data
+  postgres-data:
