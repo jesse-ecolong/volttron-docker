@@ -138,7 +138,7 @@ RUN echo "package installed at `date`"
 #    fi
 ############################################
 
-RUN python -m pip install --user pyzmq
+RUN python -m pip install --user pyzmq psycopg2-binary
 
 ########################################
 # The following lines should be run from any Dockerfile that

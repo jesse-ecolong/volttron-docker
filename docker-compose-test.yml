@@ -12,11 +12,14 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:1738:1738"
+      - "127.0.0.1:5432:5432"
 
   volttron1:
     container_name: volttron1
     hostname: volttron1
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: eclipsevolttron/volttron:test-build
     ports:
       # host_port:container_port
