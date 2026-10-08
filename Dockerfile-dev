@@ -142,6 +142,7 @@ RUN python -m pip install zmq
 
 USER volttron
 RUN python3 -m pip install --user pyzmq
+RUN python3 -m pip install --user pyzmq psycopg2-binary
 
 
 ########################################
