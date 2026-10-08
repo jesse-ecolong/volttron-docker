@@ -56,11 +56,17 @@ agents:
     source: $VOLTTRON_ROOT/services/core/VolttronCentral
     config: $CONFIG/vc.config
     tag: vc
+  
+  subscriber:
+    source: $VOLTTRON_ROOT/examples/ExampleSubscriber
+    config: $CONFIG/subscriber.config
+    tag: subscriber
 
-  weather:
-   source: $VOLTTRON_ROOT/services/core/WeatherAgent
-   config: $CONFIG/weather.config
-   tag: weather
+
+  # weather:
+  #  source: $VOLTTRON_ROOT/services/core/WeatherAgent
+  #  config: $CONFIG/weather.config
+  #  tag: weather
 
 #  price:
 #    source: $VOLTTRON_ROOT/examples/DataPublisher
