@@ -57,11 +57,6 @@ agents:
     config: $CONFIG/vc.config
     tag: vc
 
-  sqlhistorian:
-    source: $VOLTTRON_ROOT/services/core/SQLHistorian
-    config: $CONFIG/historian.config
-    tag: historian
-
   # weather:
   #  source: $VOLTTRON_ROOT/services/core/WeatherAgent
   #  config: $CONFIG/weather.config
