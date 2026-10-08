@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: volttron
       POSTGRES_USER: volttron
-      POSTGRES_PASSWORD: ec0l0ng
+      POSTGRES_PASSWORD: ec010ng
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
