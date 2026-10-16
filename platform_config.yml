@@ -31,6 +31,11 @@ agents:
         type: --csv
       devices/fake-campus/fake-building/fake-device:
         file: $VOLTTRON_ROOT/examples/configurations/drivers/fake.config
+      light.example.json:
+        file: $CONFIG/light.example.json
+        type: --json
+      devices/fake-campus/fake-building/fake-light:
+        file: $CONFIG/homeassistant-light.config
     tag: driver
 
   # TLDR: If you want to install a Volttron Central Platform agent, you must first install the
