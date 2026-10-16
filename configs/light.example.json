@@ -1,0 +1,22 @@
+[
+  {
+    "Entity ID": "light.bed_light",
+    "Entity Point": "state",
+    "Volttron Point Name": "bed_light_state",
+    "Units": "On / Off",
+    "Units Details": "on/off",
+    "Writable": true,
+    "Starting Value": false,
+    "Type": "string"
+  },
+  {
+    "Entity ID": "light.bed_light",
+    "Entity Point": "brightness",
+    "Volttron Point Name": "bed_light_brightness",
+    "Units": "percent",
+    "Units Details": "0-100",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "integer"
+  }
+]
