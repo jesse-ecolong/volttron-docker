@@ -41,6 +41,7 @@ services:
       - "22916:22916"
     volumes:
       - ./platform_config.yml:/platform_config.yml:ro
+      - ./agents/EnergyplusAgent:/home/volttron/energyplus-agent
       - ./configs:/home/volttron/configs
       - volttron1-volume:/home/volttron/db
     environment:

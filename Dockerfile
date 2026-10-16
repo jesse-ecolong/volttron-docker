@@ -1,5 +1,5 @@
-ARG image_repo=rust
-ARG image_tag=bookworm
+ARG image_repo=ubuntu
+ARG image_tag=noble
 
 FROM ${image_repo}:${image_tag} AS volttron_base
 
@@ -9,7 +9,7 @@ ARG volttron_git_branch=main
 SHELL [ "bash", "-c" ]
 #
 ENV OS_TYPE=debian
-ENV DIST=bookworm
+ENV DIST=noble
 ENV VOLTTRON_GIT_BRANCH=${volttron_git_branch}
 ENV VOLTTRON_USER_HOME=/home/volttron
 ENV VOLTTRON_HOME=${VOLTTRON_USER_HOME}/.volttron
@@ -34,10 +34,11 @@ RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
     python3-pip \
     python3-setuptools \
     python3-venv \
-    python3-wheel \
+    rustup \
     openssl \
     libssl-dev \
     libevent-dev \
+    libpq-dev \
     git \
     gnupg \
     dirmngr \
@@ -46,6 +47,10 @@ RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     libffi-dev \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libxi6 \
     sqlite3
 #
 # Set default 'python' to 'python3'
@@ -59,16 +64,39 @@ RUN python3 -m pip config set global.break-system-packages true
 #
 # Upgrade pip so that we get a pre-compiled wheel for 'cryptopgraphy', which is a dependency of Volttron
 # See https://cryptography.io/en/latest/faq/#installing-cryptography-fails-with-error-can-not-find-rust-compiler
-RUN pip install --upgrade pip
+RUN python3 -m pip install --upgrade --ignore-installed pip
 
 #
 # Install rust and cargo
 #
 RUN rustup default stable
 
+# Install EnergyPlus for the native build architecture.
+# The simulator's IDF files should be validated against this pinned version.
+ARG ENERGYPLUS_VERSION=26.2.0
+ARG ENERGYPLUS_BUILD=4bd7a1f26f
+ARG ENERGYPLUS_INSTALLER=EnergyPlus-${ENERGYPLUS_VERSION}-${ENERGYPLUS_BUILD}-Linux-Ubuntu24.04-arm64.tar.gz
+ARG ENERGYPLUS_URL=https://github.com/NatLabRockies/EnergyPlus/releases/download/v${ENERGYPLUS_VERSION}/${ENERGYPLUS_INSTALLER}
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl tar; \
+    mkdir -p /opt; \
+    curl --fail --show-error --location --retry 3 --output /tmp/${ENERGYPLUS_INSTALLER} "${ENERGYPLUS_URL}"; \
+    tar -xzf /tmp/${ENERGYPLUS_INSTALLER} --directory /opt; \
+    energyplus_dir="$(find /opt -mindepth 1 -maxdepth 1 -type d -name 'EnergyPlus-*' -print -quit)"; \
+    test -n "${energyplus_dir}"; \
+    ln -s "${energyplus_dir}" /opt/EnergyPlus; \
+    ln -s /opt/EnergyPlus/energyplus /usr/local/bin/energyplus; \
+    ln -s /opt/EnergyPlus/runenergyplus /usr/local/bin/runenergyplus; \
+    energyplus --version; \
+    rm -f /tmp/${ENERGYPLUS_INSTALLER}; \
+    rm -rf /var/lib/apt/lists/*
+
 #
 # Create a user called 'volttron'
-RUN id -u $VOLTTRON_USER &>/dev/null || adduser --disabled-password --gecos "" $VOLTTRON_USER
+RUN userdel -r ubuntu 2>/dev/null || true; \
+    id -u $VOLTTRON_USER &>/dev/null || adduser --uid $LOCAL_USER_ID --disabled-password --gecos "" $VOLTTRON_USER
 #
 RUN mkdir -p /code && chown $VOLTTRON_USER.$VOLTTRON_USER /code && \
     echo "export PATH=/home/volttron/.local/bin:$PATH" > /home/volttron/.bashrc
@@ -94,6 +122,9 @@ USER $VOLTTRON_USER
 
 
 RUN git clone --branch ${volttron_git_branch} --single-branch ${volttron_repo} ${VOLTTRON_ROOT}
+RUN sed -i 's/psycopg2-binary==2.9.7/psycopg2-binary==2.9.13/g' ${VOLTTRON_ROOT}/requirements.py
+RUN sed -i 's/action, option_string, explicit_arg = option_tuple/action, option_string, explicit_arg, *unused = option_tuple/' ${VOLTTRON_ROOT}/volttron/platform/config.py
+
 WORKDIR ${VOLTTRON_ROOT}
 
 #
@@ -103,12 +134,13 @@ RUN python3 -m pip config set global.break-system-packages true
 #
 # Upgrade pip so that we get a pre-compiled wheel for 'cryptography', which is a dependency of Volttron
 # See https://cryptography.io/en/latest/faq/#installing-cryptography-fails-with-error-can-not-find-rust-compiler
-RUN pip install --upgrade pip
+RUN python3 -m pip install --upgrade --ignore-installed pip
 
 #
 # Now install volttron required packages
 #
-RUN pip install -e . --user
+RUN python3 -m pip install --user 'Cython<3'
+RUN pip install -e . --user --no-build-isolation
 RUN echo "package installed at `date`"
 
 #

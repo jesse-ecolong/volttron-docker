@@ -368,6 +368,20 @@
             "should_expose": false
           }
         }
+      },
+      "geo_location.burn_off_2": {
+        "assistants": {
+          "conversation": {
+            "should_expose": false
+          }
+        }
+      },
+      "geo_location.grass_fire_2": {
+        "assistants": {
+          "conversation": {
+            "should_expose": false
+          }
+        }
       }
     }
   }
