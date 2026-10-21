@@ -109,3 +109,6 @@ ENV/
 
 # pycharm idea
 .idea/
+
+# EnergyPlus simulation inputs and generated output files
+simulation-data/
