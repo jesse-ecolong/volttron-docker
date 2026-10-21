@@ -112,3 +112,6 @@ ENV/
 
 # EnergyPlus simulation inputs and generated output files
 simulation-data/
+
+# BCVTB runtime resource needed by EnergyPlus ExternalInterface
+!agents/EnergyplusAgent/bcvtb/lib/
