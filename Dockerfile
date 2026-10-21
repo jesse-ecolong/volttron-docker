@@ -51,14 +51,10 @@ RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
     libxext6 \
     libxrender1 \
     libxi6 \
-    sqlite3 \
-    default-jre-headless
+    sqlite3
 #
 # Set default 'python' to 'python3'
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-
-# EnergyPlus 8.5's BCVTB ExternalInterface launches Java at runtime.
-RUN java -version
 
 #
 # Set global.break-system-packages to true to allow pip to install packages
@@ -103,11 +99,19 @@ ARG BCVTB_VERSION=1.6.0
 ARG BCVTB_INSTALLER=bcvtb-install-linux64-v${BCVTB_VERSION}.jar
 ARG BCVTB_URL=https://github.com/lbl-srg/bcvtb/releases/download/v${BCVTB_VERSION}/${BCVTB_INSTALLER}
 RUN set -eux; \
+    mkdir -p /etc/apt/keyrings; \
+    curl --fail --show-error --location --retry 3 https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor --yes --output /etc/apt/keyrings/adoptium.gpg; \
+    . /etc/os-release; \
+    printf 'deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb %s main\n' "${VERSION_CODENAME}" > /etc/apt/sources.list.d/adoptium.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends temurin-8-jre; \
+    java -version; \
     curl --fail --show-error --location --retry 3 --output /tmp/${BCVTB_INSTALLER} "${BCVTB_URL}"; \
     java -jar /tmp/${BCVTB_INSTALLER} -q -dir /opt/bcvtb; \
     test -f /opt/bcvtb/bin/BCVTB.jar; \
     test -f /opt/bcvtb/lib/xml/variables.dtd; \
-    rm -f /tmp/${BCVTB_INSTALLER}
+    rm -f /tmp/${BCVTB_INSTALLER}; \
+    rm -rf /var/lib/apt/lists/*
 
 #
 # Create a user called 'volttron'
