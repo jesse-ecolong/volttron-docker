@@ -107,6 +107,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends temurin-8-jre; \
     java -version; \
     curl --fail --show-error --location --retry 3 --output /tmp/${BCVTB_INSTALLER} "${BCVTB_URL}"; \
+    mkdir -p /opt/bcvtb; \
     java -jar /tmp/${BCVTB_INSTALLER} -q -dir /opt/bcvtb; \
     test -f /opt/bcvtb/bin/BCVTB.jar; \
     test -f /opt/bcvtb/lib/xml/variables.dtd; \

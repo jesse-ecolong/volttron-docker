@@ -2,7 +2,7 @@
 
 The simulation stack is defined in `docker-compose-sim.yml`. It starts PostgreSQL and a minimal VOLTTRON platform with the SQL historian and the EnergyPlus agent. The EnergyPlus input model and generated output files live under `simulation-data/building1` on the host. The inputs are copied from the agent's example model before each start so EnergyPlus can modify its working copy without changing the source model.
 
-The image installs amd64 EnergyPlus 8.5.0, the Temurin Java 8 runtime, and BCVTB 1.6.0. BCVTB 1.6.0 is documented as tested with EnergyPlus 8.5 and Java 8. The complete BCVTB runtime is installed in `/opt/bcvtb`; the agent config points there for its Java runtime and `variables.dtd`.
+The image installs amd64 EnergyPlus 8.5.0, the Temurin Java 8 runtime, and BCVTB 1.6.0. BCVTB 1.6.0 is documented as tested with EnergyPlus 8.5 and Java 8. Its unattended installer needs the `/opt/bcvtb` destination directory to exist first; the complete runtime is installed there, and the agent config points there for its Java runtime and `variables.dtd`.
 
 ## Start
 
