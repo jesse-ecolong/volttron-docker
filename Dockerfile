@@ -51,10 +51,14 @@ RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
     libxext6 \
     libxrender1 \
     libxi6 \
-    sqlite3
+    sqlite3 \
+    default-jre-headless
 #
 # Set default 'python' to 'python3'
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+
+# EnergyPlus 8.5's BCVTB ExternalInterface launches Java at runtime.
+RUN java -version
 
 #
 # Set global.break-system-packages to true to allow pip to install packages
