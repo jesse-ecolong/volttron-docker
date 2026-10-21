@@ -244,11 +244,12 @@ class PubSubAgent(Agent):
     def publish(self, *args):
         # Publish message
         self._now = self._now + td(minutes=1)
-        num_days = (date(2017, int(self.month)+1, 1) - date(2017, int(self.month), 1)).days
-        
+
         if self.month is None or self.day is None or self.minute is None or self.hour is None:
             _now = self._now
         else:
+            num_days = (date(2017, int(self.month) + 1, 1) -
+                        date(2017, int(self.month), 1)).days
             if self.num_of_pub >= 1:
                 if abs(self.minute - 60.0) < 0.5:
                     self.hour += 1.0
@@ -463,6 +464,9 @@ class SocketServer():
         self.rcvd = None
         self.host = "127.0.0.1"
         self.port = None
+        self.running = False
+        self.recv_buffer = bytearray()
+        self.on_disconnect = None
 
     def on_recv(self, msg):
         log.debug('Received %s' % msg)
@@ -485,36 +489,68 @@ class SocketServer():
         self.sent = msg
         if self.client is not None and self.sock is not None:
             try:
-                self.client.send(self.sent)
-            except Exception:
-                log.error('We got an error trying to send a message.')
+                self.client.sendall(self.sent)
+            except OSError:
+                if self.running:
+                    log.exception('Unable to send a message to EnergyPlus.')
 
     def recv(self):
         if self.client is not None and self.sock is not None:
             try:
                 msg = self.client.recv(self.size)
-            except Exception:
-                log.error('We got an error trying to read a message')
+            except OSError:
+                if self.running:
+                    log.exception('Unable to read a message from EnergyPlus.')
+                return b''
             return msg
+        return b''
 
     def start(self):
         log.debug('Starting socket server')
         self.run()
 
     def stop(self):
-        if self.sock != None:
-            self.sock.close()
+        self.running = False
+        for connection in (self.client, self.sock):
+            if connection is not None:
+                try:
+                    connection.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                try:
+                    connection.close()
+                except OSError:
+                    pass
+        self.client = None
+        self.sock = None
+        self.recv_buffer.clear()
 
     def listen(self):
         self.sock.listen(10)
         log.debug('server now listening')
         self.client, addr = self.sock.accept()
+        self.running = True
         log.debug('Connected with ' + addr[0] + ':' + str(addr[1]))
-        while True:
-            msg = self.recv()
-            if msg:
-                self.rcvd = msg
-                self.on_recv(msg)
+        while self.running:
+            chunk = self.recv()
+            if not chunk:
+                if self.recv_buffer:
+                    self.on_recv(bytes(self.recv_buffer))
+                    self.recv_buffer.clear()
+                if self.running:
+                    log.warning('EnergyPlus closed the socket without a completion flag.')
+                    self.running = False
+                    if self.on_disconnect:
+                        self.on_disconnect()
+                break
+
+            self.recv_buffer.extend(chunk)
+            while self.running and b'\n' in self.recv_buffer:
+                msg, _, remainder = self.recv_buffer.partition(b'\n')
+                self.recv_buffer = bytearray(remainder)
+                if msg.strip():
+                    self.rcvd = msg
+                    self.on_recv(msg)
 
 
 class EnergyPlusAgent(SynchronizingPubSubAgent):
@@ -548,6 +584,8 @@ class EnergyPlusAgent(SynchronizingPubSubAgent):
         self.currentmonth=datetime.now().month
         self.length=1
         self.maxday=monthrange(2012, self.currentmonth)[1]
+        properties = self.config.get('properties', {}) if self.config else {}
+        self.realtime = bool(properties.get('real_time_periodic', False))
 
         if not self.config:
             self.exit('No configuration found.')
@@ -568,8 +606,12 @@ class EnergyPlusAgent(SynchronizingPubSubAgent):
         self.socket_server = SocketServer()
         self.socket_server.size = self.size
         self.socket_server.on_recv = self.recv_eplus_msg
+        self.socket_server.on_disconnect = self.on_socket_disconnect
         self.socket_server.connect()
         self.core.spawn(self.socket_server.start)
+
+    def on_socket_disconnect(self):
+        self.exit('EnergyPlus closed the BCVTB socket before sending its completion flag; check eplusout.err.')
 
     def start_simulation(self):
         if not self.model:
@@ -596,11 +638,12 @@ class EnergyPlusAgent(SynchronizingPubSubAgent):
         self.write_port_file(os.path.join(model_dir, 'socket.cfg'))
         self.write_variable_file(os.path.join(model_dir, 'variables.cfg'))
         if self.version >= 8.4:
-            cmd_str = "cd %s; export BCVTB_HOME=%s; energyplus -w %s -r %s" % (
-            model_dir, bcvtb_dir, weather_path, model_path)
+            command = ['energyplus', '-w', weather_path, '-r', model_path]
         else:
-            cmd_str = "export BCVTB_HOME=%s; runenergyplus %s %s" % (bcvtb_dir, model_path, weather_path)
-        log.debug('Running: %s', cmd_str)
+            command = ['runenergyplus', model_path, weather_path]
+        environment = os.environ.copy()
+        environment['BCVTB_HOME'] = bcvtb_dir
+        log.debug('Running: %s in %s', command, model_dir)
         f = open(model_path, 'r')
         lines = f.readlines()
         f.close()
@@ -641,7 +684,7 @@ class EnergyPlusAgent(SynchronizingPubSubAgent):
         for i in range(len(lines)):
             f.writelines(lines[i])
         f.close()
-        self.simulation = subprocess.Popen(cmd_str, shell=True)
+        self.simulation = subprocess.Popen(command, cwd=model_dir, env=environment)
 
     def send_eplus_msg(self):
         if self.socket_server:
@@ -657,9 +700,9 @@ class EnergyPlusAgent(SynchronizingPubSubAgent):
 
     def recv_eplus_msg(self, msg):
         self.rcvd = msg
-        self.parse_eplus_msg(msg)
-        if self.sim_flag != '1':
-            self.publish_all_outputs()
+        if not self.parse_eplus_msg(msg):
+            return
+        self.publish_all_outputs()
         log.debug("Cosim realtime: {} -- periodic {} -- proceed {}".format(self.realtime, self.rt_periodic, self.proceed))
         if self.realtime and self.rt_periodic is None:
             while not self.proceed:
@@ -701,10 +744,18 @@ class EnergyPlusAgent(SynchronizingPubSubAgent):
         self.send_eplus_msg()
 
     def parse_eplus_msg(self, msg):
-        msg = msg.decode("utf-8") 
-        msg = msg.rstrip()
-        arry = msg.split()
-        arry = [float(item) for item in arry]
+        try:
+            arry = [float(item) for item in msg.decode('ascii').split()]
+        except (UnicodeDecodeError, ValueError):
+            preview = bytes(msg[:32]).hex(' ')
+            self.exit('Invalid EnergyPlus socket message; first bytes: {}.'.format(preview))
+            return False
+
+        if len(arry) < 6:
+            self.exit('EnergyPlus returned an incomplete socket message ({} fields; expected at least 6).'.format(
+                len(arry)))
+            return False
+
         log.info('Received message from EnergyPlus: ' + str(arry))
         slot = 6
         self.sim_flag = arry[1]
@@ -712,64 +763,82 @@ class EnergyPlusAgent(SynchronizingPubSubAgent):
         log.info('Outputs: ' + str(output))
         input = self.input()
 
+        flag_messages = {
+            1.0: 'Simulation reached end.',
+            -1.0: 'Simulation stopped with unspecified error.',
+            -10.0: 'Simulation stopped with error during initialization.',
+            -20.0: 'Simulation stopped with error during time integration.',
+        }
         if self.sim_flag != 0.0:
-            log.debug("FLAG: {} - {}".format(self.sim_flag, type(self.sim_flag)))
-            if self.sim_flag == '1':
-                self.exit('Simulation reached end: ' + self.sim_flag)
-            elif self.sim_flag == '-1':
-                self.exit('Simulation stopped with unspecified error: ' + self.sim_flag)
-            elif self.sim_flag == '-10':
-                self.exit('Simulation stopped with error during initialization: ' + self.sim_flag)
-            elif self.sim_flag == '-20':
-                self.exit('Simulation stopped with error during time integration: ' + self.sim_flag)
-        elif arry[2] < self.eplus_outputs and len(arry) < self.eplus_outputs + 6:
-            self.exit('Got message with ' + arry[2] + ' inputs. Expecting ' + str(self.eplus_outputs) + '.')
-        else:
-            if float(arry[5]):
-                self.time = float(arry[5])
-            for key in input:
-                if self.input(key, 'name') and self.input(key, 'dynamic_default'):
-                    slot = 6
-                    for key2 in output:
-                        if self.output(key2, 'default'):
-                            if self.output(key2, 'default').lower().find(self.input(key, 'name').lower()) != -1:
-                                self.input(key, 'default', float(arry[slot]))
-                                log.info('Reset')
+            message = flag_messages.get(self.sim_flag, 'EnergyPlus stopped with flag {}.'.format(self.sim_flag))
+            if self.sim_flag == 1.0:
+                log.info(message)
+                if self.socket_server:
+                    self.socket_server.stop()
+                    self.socket_server = None
+            else:
+                self.exit(message)
+            return False
+
+        expected_outputs = int(arry[2])
+        if expected_outputs != self.eplus_outputs or len(arry) < self.eplus_outputs + 6:
+            self.exit('EnergyPlus returned {} outputs; expected {}.'.format(
+                expected_outputs, self.eplus_outputs))
+            return False
+
+        if arry[5]:
+            self.time = arry[5]
+        for key in input:
+            input_name = self.input(key, 'name')
+            if input_name and self.input(key, 'dynamic_default'):
+                slot = 6
+                for key2 in output:
+                    if self.output(key2, 'name') and self.output(key2, 'type'):
+                        output_default = self.output(key2, 'default')
+                        if output_default and input_name.lower() in str(output_default).lower():
+                            self.input(key, 'default', float(arry[slot]))
+                            log.info('Reset default for %s', input_name)
                         slot += 1
-            slot = 6
-            for key in output:
-                if self.output(key, 'name') and self.output(key, 'type'):
-                    try:
-                        self.output(key, 'value', float(arry[slot]))
-                    except:
-                        print(slot)
-                        self.exit('Unable to convert received value to double.')
-                    if self.output(key, 'type').lower().find('currentmonthv') != -1:
-                        self.month = float(arry[slot])
-                        print(('month ' + str(self.month)))
-                    elif self.output(key, 'type').lower().find('currentdayofmonthv') != -1:
-                        self.day = float(arry[slot])
-                        print(('day ' + str(self.day)))
-                    elif self.output(key, 'type').lower().find('currenthourv') != -1:
-                        self.hour = float(arry[slot])
-                        print(('hour ' + str(self.hour)))
-                    elif self.output(key, 'type').lower().find('currentminutev') != -1:
-                        self.minute = float(arry[slot])
-                        print(('minute ' + str(self.minute)))
-                    elif self.output(key, 'field'):  
-                           if self.output(key, 'field').lower().find('operation') != -1:
-                                 self.operation = float(arry[slot])
-                                 print(('operation (1:on, 0: off) ' + str(self.operation)))
-                    slot += 1
+
+        slot = 6
+        for key in output:
+            output_type = self.output(key, 'type')
+            if self.output(key, 'name') and output_type:
+                try:
+                    value = float(arry[slot])
+                except (IndexError, ValueError):
+                    self.exit('Unable to read EnergyPlus output at position {}.'.format(slot))
+                    return False
+                self.output(key, 'value', value)
+                output_type = output_type.lower()
+                if 'currentmonthv' in output_type:
+                    self.month = value
+                elif 'currentdayofmonthv' in output_type:
+                    self.day = value
+                elif 'currenthourv' in output_type:
+                    self.hour = value
+                elif 'currentminutev' in output_type:
+                    self.minute = value
+                elif self.output(key, 'field') and 'operation' in self.output(key, 'field').lower():
+                    self.operation = value
+                slot += 1
+        return True
 
     def exit(self, msg):
         self.stop()
         log.error(msg)
 
-    def stop(self):
+    @Core.receiver('onstop')
+    def stop(self, sender=None, **kwargs):
         if self.socket_server:
             self.socket_server.stop()
             self.socket_server = None
+        if self.simulation is not None and self.simulation.poll() is None:
+            self.simulation.terminate()
+            try:
+                self.simulation.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                self.simulation.kill()
 
     def write_port_file(self, path):
         fh = open(path, "w+")
