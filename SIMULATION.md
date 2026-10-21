@@ -21,6 +21,15 @@ docker compose -f docker-compose-sim.yml logs -f volttron1
 
 Wait for platform setup and the EnergyPlus agent to finish installing and start before running `vctl status`; checking status during the first-time installer can interfere with setup. The expected startup includes the historian and EnergyPlus agents, then a message that the EnergyPlus process is running.
 
+When updating the EnergyPlus agent source after it has already been installed, reinstall the package so VOLTTRON uses the updated code:
+
+```sh
+docker exec -itu volttron volttron1 vctl remove --tag energyplus
+docker exec -itu volttron volttron1 vctl install /home/volttron/energyplus-agent \
+  --agent-config /home/volttron/configs/energyplus.config \
+  --tag energyplus --vip-identity energyplus --start
+```
+
 ## Verify simulation and historian data
 
 The configured run covers August 1–31 at a 90× time scale, so the full simulation is expected to take about eight hours. Successful completion should leave `simulation-data/building1/eplusout.csv`.

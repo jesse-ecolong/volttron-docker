@@ -121,7 +121,7 @@ class PubSubAgent(Agent):
     @Core.receiver('onsetup')
     def setup(self, sender, **kwargs):
         if 'inputs' in self.config:
-            self.inputs = self.config['inputs']
+            self.inputs = self.create_ordered_input(self.config['inputs'])
         if 'outputs' in self.config:
             outputs = self.config['outputs']
             self.outputs = self.create_ordered_output(outputs)
@@ -139,6 +139,26 @@ class PubSubAgent(Agent):
     @Core.receiver('onstart')
     def start(self, sender, **kwargs):
         self.subscribe()
+
+    def create_ordered_input(self, inputs):
+        if isinstance(inputs, dict):
+            input_items = inputs.items()
+        elif isinstance(inputs, list):
+            input_items = (
+                (item.get('sim_topic') or item.get('name') or str(index), item)
+                for index, item in enumerate(inputs)
+            )
+        else:
+            raise TypeError('EnergyPlus inputs must be a mapping or list.')
+
+        ordered_inputs = collections.OrderedDict()
+        for key, value in input_items:
+            if not isinstance(value, dict):
+                raise TypeError('Each EnergyPlus input must be a mapping.')
+            if key in ordered_inputs:
+                key = '{}#{}'.format(key, len(ordered_inputs))
+            ordered_inputs[key] = value
+        return ordered_inputs
 
     def create_ordered_output(self, output):
         if isinstance(output, dict):
