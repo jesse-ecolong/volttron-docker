@@ -24,8 +24,8 @@ Wait for platform setup and the EnergyPlus agent to finish installing and start 
 When updating the EnergyPlus agent source after it has already been installed, reinstall the package so VOLTTRON uses the updated code:
 
 ```sh
-docker exec -itu volttron volttron1 vctl remove --tag energyplus
-docker exec -itu volttron volttron1 vctl install /home/volttron/energyplus-agent \
+docker exec -itu volttron volttron1 /home/volttron/.local/bin/volttron-ctl remove --tag energyplus
+docker exec -itu volttron volttron1 /home/volttron/.local/bin/volttron-ctl install /home/volttron/energyplus-agent \
   --agent-config /home/volttron/configs/energyplus.config \
   --tag energyplus --vip-identity energyplus --start
 ```
