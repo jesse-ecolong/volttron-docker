@@ -141,11 +141,25 @@ class PubSubAgent(Agent):
         self.subscribe()
 
     def create_ordered_output(self, output):
+        if isinstance(output, dict):
+            output_items = output.items()
+        elif isinstance(output, list):
+            output_items = (
+                (item.get('sim_topic') or str(index), item)
+                for index, item in enumerate(output)
+            )
+        else:
+            raise TypeError('EnergyPlus outputs must be a mapping or list.')
+
         last_key = None
+        last_value = None
         ordered_out = collections.OrderedDict()
-        for key, value in output.items():
+        for key, value in output_items:
+            if not isinstance(value, dict):
+                raise TypeError('Each EnergyPlus output must be a mapping.')
+            if key in ordered_out:
+                key = '{}#{}'.format(key, len(ordered_out))
             if 'publish_last' not in value:
-            #if not value.has_key('publish_last'):
                 log.debug("Create output list: {} - {}".format(key, value))
                 ordered_out[key] = value
             else:
