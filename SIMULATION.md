@@ -1,6 +1,6 @@
 # EnergyPlus simulation
 
-The simulation stack is defined in `docker-compose-sim.yml`. It starts PostgreSQL and a minimal VOLTTRON platform with the SQL historian and the EnergyPlus agent. The EnergyPlus input model and generated output files live under `simulation-data/building1` on the host. The inputs are copied from the agent's example model before each start so EnergyPlus can modify its working copy without changing the source model.
+The simulation stack is defined in `docker-compose-sim.yml`. It starts PostgreSQL and the original VOLTTRON agents plus the EnergyPlus agent. The EnergyPlus input model and generated output files live under `simulation-data/building1` on the host. The inputs are copied from the agent's example model before each start so EnergyPlus can modify its working copy without changing the source model.
 
 The image installs amd64 EnergyPlus 8.5.0, the Temurin Java 8 runtime, and BCVTB 1.6.0. BCVTB 1.6.0 is documented as tested with EnergyPlus 8.5 and Java 8. Its IzPack installer runs unattended using [bcvtb-auto-install.xml](configs/bcvtb-auto-install.xml), which sets `/opt/bcvtb` as the target path. The complete runtime is installed there, and the agent config points there for its Java runtime and `variables.dtd`.
 
@@ -28,7 +28,9 @@ docker exec volttron1 java -version
 docker exec volttron1 ls -l /opt/bcvtb/bin/BCVTB.jar /opt/bcvtb/lib/xml/variables.dtd
 ```
 
-Wait for platform setup and the EnergyPlus agent to finish installing and start before running `vctl status`; checking status during the first-time installer can interfere with setup. The expected startup includes the historian and EnergyPlus agents, then a message that the EnergyPlus process is running.
+Wait for platform setup and the agents to finish installing and start before running `vctl status`; checking status during the first-time installer can interfere with setup. On a fresh VOLTTRON home, the expected identities are `listener`, `platform.driver`, `platform.agent`, `platform.actuator`, `platform.historian`, `volttron.central`, and `energyplus`.
+
+The simulation platform config includes Listener, Platform Driver, Volttron Central Platform, Actuator, SQL Historian, Volttron Central, and EnergyPlus. The Docker startup installs agents only when it initializes a new VOLTTRON home. If the `volttron1` container is already initialized, newly added entries in `platform_config-sim.yml` are not installed automatically; install the missing agents with `volttron-ctl` or recreate the VOLTTRON container. PostgreSQL data is stored in a separate named volume.
 
 When updating the EnergyPlus agent source after it has already been installed, reinstall the package so VOLTTRON uses the updated code:
 
