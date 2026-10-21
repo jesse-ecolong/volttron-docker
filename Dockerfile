@@ -71,25 +71,26 @@ RUN python3 -m pip install --upgrade --ignore-installed pip
 #
 RUN rustup default stable
 
-# Install EnergyPlus for the native build architecture.
-# The simulator's IDF files should be validated against this pinned version.
-ARG ENERGYPLUS_VERSION=26.2.0
-ARG ENERGYPLUS_BUILD=4bd7a1f26f
-ARG ENERGYPLUS_INSTALLER=EnergyPlus-${ENERGYPLUS_VERSION}-${ENERGYPLUS_BUILD}-Linux-Ubuntu24.04-arm64.tar.gz
+# Install the EnergyPlus version required by the simulation.
+# EnergyPlus 8.5.0 is available as a Linux x86_64 package only.
+ARG ENERGYPLUS_VERSION=8.5.0
+ARG ENERGYPLUS_BUILD=c87e61b44b
+ARG ENERGYPLUS_INSTALLER=EnergyPlus-${ENERGYPLUS_VERSION}-${ENERGYPLUS_BUILD}-Linux-x86_64.sh
 ARG ENERGYPLUS_URL=https://github.com/NatLabRockies/EnergyPlus/releases/download/v${ENERGYPLUS_VERSION}/${ENERGYPLUS_INSTALLER}
 
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends ca-certificates curl tar; \
-    mkdir -p /opt; \
+    apt-get install -y --no-install-recommends ca-certificates curl; \
     curl --fail --show-error --location --retry 3 --output /tmp/${ENERGYPLUS_INSTALLER} "${ENERGYPLUS_URL}"; \
-    tar -xzf /tmp/${ENERGYPLUS_INSTALLER} --directory /opt; \
-    energyplus_dir="$(find /opt -mindepth 1 -maxdepth 1 -type d -name 'EnergyPlus-*' -print -quit)"; \
-    test -n "${energyplus_dir}"; \
-    ln -s "${energyplus_dir}" /opt/EnergyPlus; \
-    ln -s /opt/EnergyPlus/energyplus /usr/local/bin/energyplus; \
-    ln -s /opt/EnergyPlus/runenergyplus /usr/local/bin/runenergyplus; \
-    energyplus --version; \
+    chmod +x /tmp/${ENERGYPLUS_INSTALLER}; \
+    printf 'y\n\n\n\n\n' | /tmp/${ENERGYPLUS_INSTALLER}; \
+    energyplus_bin="$(find /usr/local/EnergyPlus-${ENERGYPLUS_VERSION//./-} -maxdepth 1 -type f -name 'energyplus-*' -perm -111 -print -quit)"; \
+    runenergyplus_bin="$(find /usr/local/EnergyPlus-${ENERGYPLUS_VERSION//./-} -maxdepth 1 -type f -name runenergyplus -print -quit)"; \
+    test -n "${energyplus_bin}"; \
+    test -n "${runenergyplus_bin}"; \
+    ln -sfn "${energyplus_bin}" /usr/local/bin/energyplus; \
+    ln -sfn "${runenergyplus_bin}" /usr/local/bin/runenergyplus; \
+    /usr/local/bin/energyplus --version; \
     rm -f /tmp/${ENERGYPLUS_INSTALLER}; \
     rm -rf /var/lib/apt/lists/*
 
