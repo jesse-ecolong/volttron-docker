@@ -2,6 +2,8 @@
 
 The simulation stack is defined in `docker-compose-sim.yml`. It starts PostgreSQL and a minimal VOLTTRON platform with the SQL historian and the EnergyPlus agent. The EnergyPlus input model and generated output files live under `simulation-data/building1` on the host. The inputs are copied from the agent's example model before each start so EnergyPlus can modify its working copy without changing the source model.
 
+The image installs the amd64 EnergyPlus 8.5.0 release, a headless Java runtime, and BCVTB 1.6.0. BCVTB 1.6.0 is the release documented as tested with EnergyPlus 8.5. The complete BCVTB runtime is installed in `/opt/bcvtb`; the agent config points there for the Java runtime and `variables.dtd`.
+
 ## Start
 
 From this directory, start the simulation stack:
@@ -17,6 +19,13 @@ Follow VOLTTRON startup and agent logs:
 
 ```sh
 docker compose -f docker-compose-sim.yml logs -f volttron1
+```
+
+Confirm that the image contains Java and the BCVTB runtime:
+
+```sh
+docker exec volttron1 java -version
+docker exec volttron1 ls -l /opt/bcvtb/bin/BCVTB.jar /opt/bcvtb/lib/xml/variables.dtd
 ```
 
 Wait for platform setup and the EnergyPlus agent to finish installing and start before running `vctl status`; checking status during the first-time installer can interfere with setup. The expected startup includes the historian and EnergyPlus agents, then a message that the EnergyPlus process is running.

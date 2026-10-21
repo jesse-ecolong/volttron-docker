@@ -98,6 +98,17 @@ RUN set -eux; \
     rm -f /tmp/${ENERGYPLUS_INSTALLER}; \
     rm -rf /var/lib/apt/lists/*
 
+# BCVTB 1.6.0 is the release whose examples were updated and tested with EnergyPlus 8.5.
+ARG BCVTB_VERSION=1.6.0
+ARG BCVTB_INSTALLER=bcvtb-install-linux64-v${BCVTB_VERSION}.jar
+ARG BCVTB_URL=https://github.com/lbl-srg/bcvtb/releases/download/v${BCVTB_VERSION}/${BCVTB_INSTALLER}
+RUN set -eux; \
+    curl --fail --show-error --location --retry 3 --output /tmp/${BCVTB_INSTALLER} "${BCVTB_URL}"; \
+    java -jar /tmp/${BCVTB_INSTALLER} -q -dir /opt/bcvtb; \
+    test -f /opt/bcvtb/bin/BCVTB.jar; \
+    test -f /opt/bcvtb/lib/xml/variables.dtd; \
+    rm -f /tmp/${BCVTB_INSTALLER}
+
 #
 # Create a user called 'volttron'
 RUN userdel -r ubuntu 2>/dev/null || true; \
