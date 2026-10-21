@@ -98,6 +98,9 @@ RUN set -eux; \
 ARG BCVTB_VERSION=1.6.0
 ARG BCVTB_INSTALLER=bcvtb-install-linux64-v${BCVTB_VERSION}.jar
 ARG BCVTB_URL=https://github.com/lbl-srg/bcvtb/releases/download/v${BCVTB_VERSION}/${BCVTB_INSTALLER}
+# This IzPack installer takes an AutomatedInstallation XML file as its argument;
+# it does not support the install4j-style -q and -dir options.
+COPY configs/bcvtb-auto-install.xml /tmp/bcvtb-auto-install.xml
 RUN set -eux; \
     mkdir -p /etc/apt/keyrings; \
     curl --fail --show-error --location --retry 3 https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor --yes --output /etc/apt/keyrings/adoptium.gpg; \
@@ -107,11 +110,11 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends temurin-8-jre; \
     java -version; \
     curl --fail --show-error --location --retry 3 --output /tmp/${BCVTB_INSTALLER} "${BCVTB_URL}"; \
-    mkdir -p /opt/bcvtb; \
-    java -jar /tmp/${BCVTB_INSTALLER} -q -dir /opt/bcvtb; \
+    java -jar /tmp/${BCVTB_INSTALLER} /tmp/bcvtb-auto-install.xml; \
     test -f /opt/bcvtb/bin/BCVTB.jar; \
     test -f /opt/bcvtb/lib/xml/variables.dtd; \
     rm -f /tmp/${BCVTB_INSTALLER}; \
+    rm -f /tmp/bcvtb-auto-install.xml; \
     rm -rf /var/lib/apt/lists/*
 
 #
