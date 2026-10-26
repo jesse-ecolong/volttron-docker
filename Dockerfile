@@ -138,13 +138,16 @@ RUN python3 -m pip config set global.break-system-packages true
 RUN python3 -m pip install --upgrade --ignore-installed pip
 
 #
-# Now install volttron required packages
+# Install VOLTTRON required packages
 #
-RUN python3 -m pip install --user 'wheel==0.30.0'
+RUN python3 -m pip install --user "wheel==0.30.0"
 RUN python3 -m pip install --user 'Cython<3'
-RUN pip install -e . --user --no-build-isolation
-RUN echo "package installed at `date`"
+RUN python3 -m pip install -e . --user --no-build-isolation
 
+# Verify the wheel module required by VOLTTRON is available
+RUN python3 -c "from wheel.tool import unpack; print('wheel.tool import successful')"
+
+RUN echo "package installed at `date`"
 #
 #############################################
 ## RABBITMQ SPECIFIC INSTALLATION
