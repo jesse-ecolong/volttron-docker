@@ -33,7 +33,7 @@ agents:
 
   platform.actuator:
     source: /code/EnergyPlusAgent
-    config: $CONFIG/eneergyplus.config
+    config: $CONFIG/energyplus.config
     tag: energyplus
 
   platform.historian:
