@@ -1,7 +1,0 @@
-.git
-.gitmodules
-.DS_Store
-__pycache__
-*.pyc
-agents/EnergyplusAgent/eplus_config/building1/eplusout.*
-simulation-data/
