@@ -13,7 +13,7 @@ services:
       # http port for volttron central
       - "8443:8443"
     volumes:
-      - ./platform_config.yml:/platform_config.yml
+      - ./platform_config-sim.yml:/platform_config-sim.yml
       - ./configs:/home/volttron/configs
       - volttron1-volume:/home/volttron/db
     environment:
