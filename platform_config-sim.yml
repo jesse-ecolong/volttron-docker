@@ -33,7 +33,7 @@ agents:
 
   platform.actuator:
     source: /code/EnergyPlusAgent
-    config: $CONFIG/ep_smalloffice.config
+    config: $CONFIG/eneergyplus.config
     tag: energyplus
 
   platform.historian:
