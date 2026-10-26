@@ -1,0 +1,132 @@
+[
+  {
+    "Entity ID": "climate.ecobee",
+    "Entity Point": "state",
+    "Volttron Point Name": "ecobee_state",
+    "Units": "hvac_mode",
+    "Units Details": "0=off, 2=heat, 3=cool, 4=auto",
+    "Writable": true,
+    "Starting Value": 0,
+    "Type": "integer"
+  },
+  {
+    "Entity ID": "climate.ecobee",
+    "Entity Point": "temperature",
+    "Volttron Point Name": "ecobee_temperature",
+    "Units": "temperature",
+    "Units Details": "target temperature",
+    "Writable": true,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "climate.ecobee",
+    "Entity Point": "current_temperature",
+    "Volttron Point Name": "ecobee_current_temperature",
+    "Units": "temperature",
+    "Units Details": "current temperature",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "climate.heatpump",
+    "Entity Point": "state",
+    "Volttron Point Name": "heatpump_state",
+    "Units": "hvac_mode",
+    "Units Details": "0=off, 2=heat, 3=cool, 4=auto",
+    "Writable": true,
+    "Starting Value": 0,
+    "Type": "integer"
+  },
+  {
+    "Entity ID": "climate.heatpump",
+    "Entity Point": "temperature",
+    "Volttron Point Name": "heatpump_temperature",
+    "Units": "temperature",
+    "Units Details": "target temperature",
+    "Writable": true,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "climate.heatpump",
+    "Entity Point": "current_temperature",
+    "Volttron Point Name": "heatpump_current_temperature",
+    "Units": "temperature",
+    "Units Details": "current temperature",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "climate.hvac",
+    "Entity Point": "state",
+    "Volttron Point Name": "hvac_state",
+    "Units": "hvac_mode",
+    "Units Details": "0=off, 2=heat, 3=cool, 4=auto",
+    "Writable": true,
+    "Starting Value": 0,
+    "Type": "integer"
+  },
+  {
+    "Entity ID": "climate.hvac",
+    "Entity Point": "temperature",
+    "Volttron Point Name": "hvac_temperature",
+    "Units": "temperature",
+    "Units Details": "target temperature",
+    "Writable": true,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "climate.hvac",
+    "Entity Point": "current_temperature",
+    "Volttron Point Name": "hvac_current_temperature",
+    "Units": "temperature",
+    "Units Details": "current temperature",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "sensor.outside_temperature",
+    "Entity Point": "state",
+    "Volttron Point Name": "outside_temperature",
+    "Units": "temperature",
+    "Units Details": "outside temperature",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "sensor.outside_humidity",
+    "Entity Point": "state",
+    "Volttron Point Name": "outside_humidity",
+    "Units": "percent",
+    "Units Details": "outside humidity",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "sensor.thermostat",
+    "Entity Point": "state",
+    "Volttron Point Name": "thermostat_temperature",
+    "Units": "temperature",
+    "Units Details": "thermostat temperature",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "float"
+  },
+  {
+    "Entity ID": "number.temperature_setting",
+    "Entity Point": "state",
+    "Volttron Point Name": "temperature_setting",
+    "Units": "temperature",
+    "Units Details": "temperature setting",
+    "Writable": false,
+    "Starting Value": 0,
+    "Type": "float"
+  }
+]

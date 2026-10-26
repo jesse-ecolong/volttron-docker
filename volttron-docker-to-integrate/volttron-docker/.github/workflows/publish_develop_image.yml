@@ -1,0 +1,114 @@
+# This workflow is based on example from # https://github.com/marketplace/actions/build-and-push-docker-images
+
+name: Publish Develop Image
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+env:
+  # Image name on Volttron DockerHub account at https://hub.docker.com/orgs/eclipsevolttron
+  IMAGE_BASE_NAME: ${{vars.IMAGE_BASE_NAME || 'eclipsevolttron/volttron'}}
+  IMAGE_TAG: ${{ vars.IMAGE_TAG || github.ref == 'refs/heads/develop' && 'develop' || 'test-build'}}
+  VOLTTRON_GIT_REPO: ${{vars.VOLTTRON_GIT_REPO || 'https://github.com/VOLTTRON/volttron.git'}}
+  VOLTTRON_GIT_BRANCH: ${{vars.VOLTTRON_GIT_BRANCH || 'develop'}}
+
+jobs:
+  publish_develop_to_dhub:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+    - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+    - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+
+    # https://github.com/marketplace/actions/checkout
+    - name: Check out the repo
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      with:
+        platforms: linux/amd64,linux/arm64
+
+    - name: Login to DockerHub
+      run: |
+        if [ -n "${{ vars.DOCKER_USER }}" -a -n "${{ secrets.DOCKER_API_TOKEN }}" ]; then
+          echo " "
+          echo "Connecting to docker"
+
+          echo "${{ secrets.DOCKER_API_TOKEN }}" | docker login -u "${{ vars.DOCKER_USER }}" --password-stdin
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "Error: status $status"
+            exit 1
+          fi
+        fi
+
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ${{ env.DOCKERFILE || './Dockerfile' }}
+        platforms: linux/amd64,linux/arm64
+        build-args: |
+          volttron_git_branch=${{ env.VOLTTRON_GIT_BRANCH }}
+          volttron_repo=${{ env.VOLTTRON_GIT_REPO }}
+        push: true
+        tags: |
+          ${{ env.IMAGE_BASE_NAME }}:${{ env.IMAGE_TAG }}
+
+#     - name: Build Image
+#       id: docker_build
+#       run: |
+#         echo "Building image"
+#         echo "docker buildx build \
+#           --build-arg volttron_git_branch=${{ env.VOLTTRON_GIT_BRANCH }} \
+#           --build-arg volttron_repo=${{ env.VOLTTRON_GIT_REPO }} \
+#           --platform linux/amd64,linux/arm64 \
+#           -t ${{ env.IMAGE_BASE_NAME }}:${{ env.IMAGE_TAG }} \
+#           -f ${{ env.DOCKERFILE || './Dockerfile' }} --no-cache --force-rm --load ."
+#         docker buildx build \
+#           --build-arg volttron_git_branch=${{ env.VOLTTRON_GIT_BRANCH }} \
+#           --build-arg volttron_repo=${{ env.VOLTTRON_GIT_REPO }} \
+#           --platform linux/amd64,linux/arm64 \
+#           -t ${{ env.IMAGE_BASE_NAME }}:${{ env.IMAGE_TAG }} \
+#           -f ${{ env.DOCKERFILE || './Dockerfile' }} --load .
+#         status=$?
+#         if [ $status -ne 0 ]; then
+#           echo "Error: status $status"
+#           exit 1
+#         fi
+#
+#     - name: Push Image
+#       id: docker_push
+#       run: |
+#         echo "Pushing image"
+#         # docker images
+#         echo "docker push ${{ env.IMAGE_BASE_NAME }}:${{ env.IMAGE_TAG }}"
+#         echo "digest=$(docker push ${{ env.IMAGE_BASE_NAME }}:${{ env.IMAGE_TAG }} | grep '${{env.IMAGE_TAG}}: digest:')" >> $GITHUB_OUTPUT
+#         status=$?
+#         if [ $status -ne 0 ]; then
+#           echo "Error: status $status"
+#           exit 1
+#         fi
+
+#    - name: Show publish digest
+#      run: |
+#        echo "docker_push.outputs.digest: ${{ steps.docker_push.outputs.digest }}"
+
+    - name: Check image publish
+      if: steps.docker_build.outputs.digest == ''
+      run: exit 1
+
+    - name: Image Digest
+      run: echo ${{ steps.docker_build.outputs.digest }}
+
+    - run: echo "🍏 This job's status is ${{ job.status }}."

@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: volttron-postgres
+    environment:
+      POSTGRES_DB: volttron
+      POSTGRES_USER: volttron
+      POSTGRES_PASSWORD: ec0l0ng
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volttron -d volttron"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  volttron1:
+    container_name: volttron1
+    hostname: volttron1
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: eclipsevolttron/volttron:energyplus-sim
+    ports:
+      - "8443:8443"
+      - "22916:22916"
+    volumes:
+      - ./platform_config-sim.yml:/platform_config.yml:ro
+      - ./configs:/home/volttron/configs
+      - ./simulation-data:/simulation-data
+      - volttron1-sim-volume:/home/volttron/db
+    environment:
+      CONFIG: /home/volttron/configs
+      LOCAL_USER_ID: "${LOCAL_USER_ID:-1000}"
+      TZ: America/Los_Angeles
+      PYTHONPATH: /code/volttron
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  volttron1-sim-volume:
+    name: volttron1-sim-data
+  postgres-data:
+    name: volttron-postgres-data
+
