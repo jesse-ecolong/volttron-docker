@@ -4050,7 +4050,7 @@ Coil:Cooling:DX:SingleSpeed,
     always_avail,            !- Availability Schedule Name
     autosize,                !- Gross Rated Total Cooling Capacity {W}
     autosize,                !- Gross Rated Sensible Heat Ratio
-    4.06853019625951,        !- Gross Rated Cooling COP {W/W}
+    6.42,                    !- Gross Rated Cooling COP {W/W}
     autosize,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     Cooling Coil Air Inlet Node_unit1,  !- Air Inlet Node Name
@@ -4079,7 +4079,7 @@ Coil:Heating:DX:SingleSpeed,
     Main DX Heating Coil_unit1,  !- Name
     always_avail,            !- Availability Schedule Name
     autosize,                !- Gross Rated Heating Capacity {W}
-    3.69308080013886,        !- Gross Rated Heating COP {W/W}
+    6.04,                    !- Gross Rated Heating COP {W/W}
     autosize,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Supply Fan Power Per Volume Flow Rate {W/(m3/s)}
     Heating Coil Air Inlet Node_unit1,  !- Air Inlet Node Name

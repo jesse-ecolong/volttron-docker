@@ -1,0 +1,13 @@
+{
+  "workflows": {
+    "EnergyPlus-26.2.0 IP": {
+      "files": {
+        "residential_testsite_1.idf": {
+          "config": {
+            "weather": "/Users/jessemcdonald/Desktop/volttron-repos/volttron-docker/agents/EnergyplusAgent/eplus_config/USA_NY_Albany.Intl.AP.725180_TMY3.epw"
+          }
+        }
+      }
+    }
+  }
+}
