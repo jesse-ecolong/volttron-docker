@@ -7,7 +7,6 @@
 
 !-   ===========  ALL OBJECTS IN CLASS: VERSION ===========
 
-! weatherfile = USA_NY_Albany.Intl.AP.725180_TMY3.epw;
 Version,8.4;
 
 !-   ===========  ALL OBJECTS IN CLASS: SIMULATIONCONTROL ===========
