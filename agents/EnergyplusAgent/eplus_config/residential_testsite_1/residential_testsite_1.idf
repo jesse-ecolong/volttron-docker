@@ -143,10 +143,10 @@ Timestep,
 
 RunPeriod,
     annual,                  !- Name
-    1,                       !- Begin Month
+    8,                       !- Begin Month
     1,                       !- Begin Day of Month
     ,                        !- Begin Year
-    12,                      !- End Month
+    8,                      !- End Month
     31,                      !- End Day of Month
     ,                        !- End Year
     Sunday,                  !- Day of Week for Start Day
