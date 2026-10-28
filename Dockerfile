@@ -3,7 +3,9 @@ ARG image_tag=noble
 
 FROM ${image_repo}:${image_tag} AS volttron_base
 
-# THIS IS THE DOCKERFILE FOR RESIDENTIAL ENERGYPLUS SIMULATIONS. ENERGYPLUS VERSION 9.5
+
+# THIS IS THE DOCKERFILE FOR COMMERCIAL ENERGYPLUS SIMULATIONS. ENERGYPLUS VERSION 8.5
+
 
 #
 SHELL [ "bash", "-c" ]
@@ -83,13 +85,13 @@ RUN apt-get install python3-scipy python3-sklearn python3-sklearn-lib python-skl
 #
 RUN rustup default stable
 
-# Download and install energyplus 9.5.0
+# Download and install energyplus 8.5.0
 # DO NOT update to latest version; IDF files for energyplus are not backward compatible
-RUN wget https://github.com/NREL/EnergyPlus/releases/download/v9.5.0/EnergyPlus-9.5.0-de239b2e5f-Linux-Ubuntu20.04-x86_64.sh
+RUN wget https://github.com/NREL/EnergyPlus/releases/download/v8.5.0/EnergyPlus-8.5.0-c87e61b44b-Linux-x86_64.sh
 
 # This command will automate the interactive installation script by automatically answering the three questions being presented:
 # The printf command mimics the manual action of entering "yes" followed by two "enter" commands to accept the default configuration
-RUN printf 'y\n\n\n\n\n' | bash EnergyPlus-9.5.0-de239b2e5f-Linux-Ubuntu20.04-x86_64.sh
+RUN printf 'y\n\n\n\n\n' | bash EnergyPlus-8.5.0-c87e61b44b-Linux-x86_64.sh
 
 
 
