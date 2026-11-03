@@ -234,14 +234,22 @@ class PubSubAgent(Agent):
             else:
                 self.hour = 0.0
                 self.minute = 0.0
+            
             second, minute = modf(self.minute)
-            self.second = int(second * 60.0)
+            self.second = int(round(second * 60.0))
             self.minute = int(minute)
-            date_string = str(self.startyear) + '-' + str(self.month).replace('.0', '') + \
-                          '-' + str(self.day).replace('.0', '') + ' ' + \
-                          str(self.hour).replace('.0', '') + ':' + \
-                          str(self.minute) + ':' + str(self.second)
-            _now = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+
+            # Normalize EnergyPlus date/time values to integers
+            year = int(round(float(self.startyear)))
+            month = int(round(float(self.month)))
+            day = int(round(float(self.day)))
+            hour = int(round(float(self.hour)))
+            minute = int(round(float(self.minute)))
+            second = int(round(float(self.second)))
+
+            # Handle rollover at the end of a minute, hour, or day
+            _now = datetime(year, month, day, hour, minute, second)
+
         _now = _now.isoformat(' ') + 'Z'
         log.info('Publish the builiding response for timetamp: {}.'.format(_now))
 
