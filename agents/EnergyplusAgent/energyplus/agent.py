@@ -235,20 +235,30 @@ class PubSubAgent(Agent):
                 self.hour = 0.0
                 self.minute = 0.0
             
-            second, minute = modf(self.minute)
-            self.second = int(round(second * 60.0))
-            self.minute = int(minute)
+            # Convert fractional EnergyPlus minutes into valid minutes and seconds
+            total_seconds = int(round(float(self.minute) * 60))
 
-            # Normalize EnergyPlus date/time values to integers
+            minute_value, second = divmod(total_seconds, 60)
+
+            # Normalize date and time values to integers
             year = int(round(float(self.startyear)))
             month = int(round(float(self.month)))
             day = int(round(float(self.day)))
             hour = int(round(float(self.hour)))
-            minute = int(round(float(self.minute)))
-            second = int(round(float(self.second)))
 
-            # Handle rollover at the end of a minute, hour, or day
-            _now = datetime(year, month, day, hour, minute, second)
+            # Store normalized minute and second values
+            self.minute = minute_value
+            self.second = second
+
+            # Construct timestamp
+            _now = datetime(
+                year,
+                month,
+                day,
+                hour,
+                minute_value,
+                second
+            )
 
         _now = _now.isoformat(' ') + 'Z'
         log.info('Publish the builiding response for timetamp: {}.'.format(_now))
