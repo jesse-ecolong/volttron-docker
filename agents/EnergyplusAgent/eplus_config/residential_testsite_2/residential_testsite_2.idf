@@ -64,7 +64,7 @@ SurfaceConvectionAlgorithm:Inside,
 !-   ===========  ALL OBJECTS IN CLASS: TIMESTEP ===========
 
 Timestep,
-    60;                       !- Number of Timesteps per Hour
+    4;                       !- Number of Timesteps per Hour
 
 
 !-   ===========  ALL OBJECTS IN CLASS: SITE:LOCATION ===========
@@ -143,13 +143,13 @@ Timestep,
 
 RunPeriod,
     annual,                  !- Name
-    8,                       !- Begin Month
+    7,                       !- Begin Month
     1,                       !- Begin Day of Month
     ,                        !- Begin Year
-    8,                      !- End Month
+    7,                      !- End Month
     31,                      !- End Day of Month
     ,                        !- End Year
-    Thursday,                 !- Day of Week for Start Day
+    Wednesday,                 !- Day of Week for Start Day
     Yes,                     !- Use Weather File Holidays and Special Days
     Yes,                     !- Use Weather File Daylight Saving Period
     No,                      !- Apply Weekend Holiday Rule
